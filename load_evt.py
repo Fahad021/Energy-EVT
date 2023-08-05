@@ -14,7 +14,15 @@ class LoadDataset(Dataset):
 		"""
 		# years = range(2010,2019)
 		# dfs = (pd.read_csv("http://pjm.com/pub/account/loadhryr/%s.txt"%str(yr)) for yr in years)
-		dfs = (pd.read_csv("../data/load/%s.txt"%str(yr),usecols=[0,1,2],names=["date","hour","load"],header=0) for yr in years)
+		dfs = (
+			pd.read_csv(
+				f"../data/load/{str(yr)}.txt",
+				usecols=[0, 1, 2],
+				names=["date", "hour", "load"],
+				header=0,
+			)
+			for yr in years
+		)
 		load_df   = pd.concat(dfs, ignore_index=True)
 		load_df.date = pd.to_datetime(load_df.date, format='%m/%d/%y')
 		load_df.hour = pd.to_numeric(load_df.hour/100, downcast="integer")
@@ -94,7 +102,7 @@ nout = 1
 model = EVT(nin,hidden,nout)
 optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate,weight_decay=1e-4)
 # optimizer = torch.optim.Adam(list(model.parameters()) + [model.xi],lr=learning_rate)
-loss_func = torch.nn.MSELoss() 
+loss_func = torch.nn.MSELoss()
 # u = (u - td.min)/(td.max - td.min)
 u = ((u - td.mean)/(td.std)).item()
 nBtrain = int(len(td)/dataloader.batch_size*0.98)
@@ -127,7 +135,7 @@ for epoch in range(nepoch):
 		optimizer.step()
 		if i==nBtrain:
 			break
-	print("Epoch %s: "%epoch, loss.item())
+	print(f"Epoch {epoch}: ", loss.item())
 
 # print(xi.item())
 # test_ind = range(nBtrain*dataloader.batch_size, len(td))
@@ -143,7 +151,7 @@ t = np.array(range(n))
 # plt.plot(t, td.std.item()*y.astype(np.float32)+td.mean.item(), 'k--', t, td.std.item()*(u+yhat.astype(np.float32)/(1-xi.item()))+td.mean.item(), 'r-')
 plt.figure()
 plt.plot(t, td.std.item()*y.astype(np.float32)+td.mean.item(), 'k--', t, td.std.item()*(u+yhat.astype(np.float32))+td.mean.item(), 'r-')
-plt.savefig(str(seed)+"_evt.png")
+plt.savefig(f"{seed}_evt.png")
 
 
 # model(torch.tensor(td[10]["past"]).unsqueeze(0))
